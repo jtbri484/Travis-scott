@@ -1,0 +1,86 @@
+public class CoinsController : MonoBehaviour
+{
+    [SerializeField]
+    private int numberOfCoins;
+
+    [SerializeField]
+    private float radius;
+
+    [SerializeField]
+    private string coinTag;
+
+    [SerializeField]
+    private float pickupSpeed;
+
+    [SerializeField]
+    private float pickupDistance;
+
+    private List<Transform> coins;
+
+    void Start()
+    {
+        coins = new List<Transform>();
+    }
+
+    void FixedUpdate()
+    {
+        Collider[] hitColliders = Physics.OverlapSphere(transform.position, radius);
+
+        for (int i = 0; i < hitColliders.Length; i++)
+        {
+            if (hitColliders[i].CompareTag(coinTag) &&
+                !coins.Contains(hitColliders[i].transform))
+            {
+                coins.Add(hitColliders[i].transform);
+            }
+        }
+
+        for (int i = 0; i < coins.Count; i++)
+        {
+            if (Vector3.Distance(transform.position, coins[i].position) <= pickupDistance)
+            {
+                numberOfCoins += 1;
+                coins[i].gameObject.SetActive(false);
+                coins.Remove(coins[i]);
+            } 
+            else
+            {
+                float step = pickupSpeed * Time.deltaTime;
+                coins[i].position = Vector3.MoveTowards(coins[i].position, transform.position, step);
+            }
+        }
+    }
+}
+
+/* Movement.cs */
+using UnityEngine;
+
+public class Movement : MonoBehaviour
+{
+    private new Rigidbody rigidbody;
+
+    [SerializeField]
+    private float speed;
+
+    [SerializeField]
+    private ForceMode forceMode;
+
+    // Start is called before the first frame update
+    void Start()
+    {
+        rigidbody = GetComponent<Rigidbody>();
+    }
+
+    // Update is called once per frame
+    void Update()
+    {
+        float h = Input.GetAxis("Horizontal");
+        float v = Input.GetAxis("Vertical");
+        Vector3 velocity = new Vector3(0, 0, v);
+        velocity = transform.TransformDirection(velocity);
+        velocity *= speed;
+        velocity -= rigidbody.velocity;
+        rigidbody.AddForce(velocity, forceMode);
+        transform.Rotate(new Vector3(0, h, 0));
+    }
+}
